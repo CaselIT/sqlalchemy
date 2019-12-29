@@ -1658,8 +1658,8 @@ class OracleDialect(default.DefaultDialect):
         text = """
             SELECT col.column_name, col.data_type, col.%(char_length_col)s,
               col.data_precision, col.data_scale, col.nullable,
-              col.data_default, com.comments\
-            FROM all_tab_columns%(dblink)s col
+              col.data_default, com.comments, col.virtual_column\
+            FROM all_tab_cols%(dblink)s col
             LEFT JOIN all_col_comments%(dblink)s com
             ON col.table_name = com.table_name
             AND col.column_name = com.column_name
@@ -1684,6 +1684,7 @@ class OracleDialect(default.DefaultDialect):
             nullable = row[5] == "Y"
             default = row[6]
             comment = row[7]
+            genetared = row[8]
 
             if coltype == "NUMBER":
                 if precision is None and scale == 0:
@@ -1707,6 +1708,9 @@ class OracleDialect(default.DefaultDialect):
                         % (coltype, colname)
                     )
                     coltype = sqltypes.NULLTYPE
+
+            if genetared == "YES":
+                default = None
 
             cdict = {
                 "name": colname,

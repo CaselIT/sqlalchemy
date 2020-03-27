@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run tests
 
 on:
   push:
@@ -24,9 +24,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'windows-latest', 'macos-latest']
-        python-version: [ '3.7' ]
+        os:
+          - 'ubuntu-latest'
+          - 'windows-latest'
+          - 'macos-latest'
+        python-version:
+          - '3.7'
       fail-fast: true
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -42,4 +47,4 @@ jobs:
           pip install tox
 
       - name: Run tests
-        run: tox -- -q -k 'not MockReconnectTest'
+        run: tox -- -q -k 'not MockReconnectTest' --nomemory

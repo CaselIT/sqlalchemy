@@ -1,4 +1,4 @@
-name: run-test
+name: Run Tests
 
 on:
   push:
@@ -20,7 +20,7 @@ env:
 
 jobs:
   run-test:
-    name: Runs Tests on ${{ matrix.os }}
+    name: Runs Tests on ${{ matrix.os }} python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -31,7 +31,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Setup python
+      - name: Set up python
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}

@@ -359,7 +359,7 @@ BaseRow_subscript_impl(BaseRow *self, PyObject *key, int asmapping)
             /* -1 can be either the actual value, or an error flag. */
             return NULL;
         if (index < 0)
-            index += BaseRow_length(self);
+            index += (long)BaseRow_length(self);
         return BaseRow_getitem(self, index);
     } else if (PySlice_Check(key)) {
         values = PyObject_GetItem(self->row, key);

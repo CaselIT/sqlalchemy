@@ -33,7 +33,7 @@ jobs:
         include:
           - python-version: '2.7'
           - extra-requires: 'mock'
-      fail-fast: true
+      fail-fast: false
 
     steps:
       - name: Checkout repo
@@ -91,10 +91,14 @@ jobs:
       - name: Move in single folder
         run: |
           mkdir wheels
-          mv single/**/whl wheels
+          mv single/**/*.whl wheels
 
       - name: Upload wheel
         uses: actions/upload-artifact@v1
         with:
           name: all-wheels
           path: wheels
+
+      - name: check wheels
+        run: |
+          unzip -l `ls -1 | tail -n 1`

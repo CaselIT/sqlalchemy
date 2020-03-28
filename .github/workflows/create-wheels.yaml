@@ -56,11 +56,21 @@ jobs:
           pip install setuptools wheel
           pip wheel -w dist --no-use-pep517 -v .
 
+      - name: Create python PEP 425 tag for manylinux build
+        id: linux-py-version
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          python-version: ${{ matrix.python-version }}
+        run: |
+          pv="${python-version/./}"
+          full-version=cp$pv-cp$pvm
+          echo "::set-output name=python-version::$full-version"
+
       - name: Create wheel for manylinux
         if: matrix.os == 'ubuntu-latest'
         uses: RalfG/python-wheels-manylinux-build@v0.2.2-manylinux2010_x86_64
         with:
-          python-versions: ${{ format('cp{0}{1}-cp{0}{1}m', matrix.python-version[0], matrix.python-version[1]) }}
+          python-versions: ${{ steps.linux-py-version.outputs.python-version }}
           build-requirements: 'setuptools wheel'
           pip-wheel-args: '-w dist --no-use-pep517 -v --no-deps'
 

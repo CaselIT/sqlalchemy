@@ -9,7 +9,7 @@ env:
 
 jobs:
   make-wheel:
-    name: Create wheel on ${{ matrix.os }} python ${{ matrix.python-version }}
+    name: ${{ matrix.os }}-${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

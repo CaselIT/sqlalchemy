@@ -56,6 +56,13 @@ jobs:
       - name: Install wheel
         run: |
           pip install -f dist --no-index sqlalchemy
+
+      - name: Check c extensions
+        # on windows in python 2.7 and 3.5 the cextension fail to build.
+        # for python 2.7 visual studio 9 is missing
+        # for python 3.5 the linker has an error "cannot run 'rc.exe'"
+        if: matrix.os != 'windows-latest' || ( matrix.python-version != '2.7' && matrix.python-version != '3.5' )
+        run: |
           python -c 'from sqlalchemy import cprocessors, cresultproxy, cutils'
 
       - name: Test created wheel

@@ -83,5 +83,5 @@ jobs:
       - name: Upload wheel
         uses: actions/upload-artifact@v1
         with:
-          name: wheels-${{ github.ref }}
+          name: all-wheels
           path: wheels

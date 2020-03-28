@@ -60,11 +60,12 @@ jobs:
         id: linux-py-version
         if: matrix.os == 'ubuntu-latest'
         env:
-          python-version: ${{ matrix.python-version }}
+          pyversion: ${{ matrix.python-version }}
         run: |
-          pv="${python-version/./}"
-          full-version=cp$pv-cp$pvm
-          echo "::set-output name=python-version::$full-version"
+          pv="${pyversion/./}"
+          echo $pv
+          pytag="cp$pv-cp$pvm"
+          echo "::set-output name=python-version::$pytag"
 
       - name: Create wheel for manylinux
         if: matrix.os == 'ubuntu-latest'

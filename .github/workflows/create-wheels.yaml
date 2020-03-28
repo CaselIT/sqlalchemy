@@ -58,9 +58,15 @@ jobs:
         run: |
           pip wheel -w dist --no-use-pep517 -v .
 
-      - name: Log stuff
+      - name: Get wheel name
+        id: wheel-name
+        shell: bash
+        env:
+          JOB: ${{ toJSON(job) }}
+        # creates output from https://github.community/t5/GitHub-Actions/Using-the-output-of-run-inside-of-if-condition/td-p/33920
         run: |
-          echo ${{ toJSON(job) }} || echo 1
+          echo $JOB
+          echo ::set-output name=wheel::`ls dist`
 
       # - name: Install wheel
       #   run: |
@@ -74,17 +80,29 @@ jobs:
       #   run: |
       #     python -c 'from sqlalchemy import cprocessors, cresultproxy, cutils'
 
+      - name: Upload wheel to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: disc/${{ steps.wheel-name.outputs.wheel }}
+          asset_name: ${{ steps.wheel-name.outputs.wheel }}
+          asset_content_type: application/zip
+          # application/octet-stream
       # - name: Test created wheel
       #   run: |
       #     pip install pytest pytest-xdist ${{ matrix.extra-requires }}
       #     pytest -n2 -q test -k 'not MockReconnectTest' --nomemory
 
       - name: Publish wheel
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.test_pypi_token }}
-          repository_url: https://test.pypi.org/legacy/
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+        run: |
+          pip install -U twine
+          twine upload dist/*
 
 
   # download-artifact@v2 does not work. See https://github.com/actions/download-artifact/issues/23#issuecomment-605435160

@@ -20,7 +20,7 @@ env:
 
 jobs:
   run-test:
-    name: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.build-type }}-${{ matrix.architecture }}
+    name: ${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.build-type }}-${{ matrix.architecture }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

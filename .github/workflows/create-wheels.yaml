@@ -49,24 +49,20 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.architecture }}
 
-      - name: Install dependencies
+      - name: Create wheel windows or osx
+        if: matrix.os != 'ubuntu-latest'
         run: |
           python -m pip install --upgrade pip
           pip install setuptools wheel
-
-      - name: Create wheel
-        run: |
           pip wheel -w dist --no-use-pep517 -v .
 
-      - name: Get wheel name
-        id: wheel-name
-        shell: bash
-        env:
-          JOB: ${{ toJSON( github.event) }}
-        # creates output from https://github.community/t5/GitHub-Actions/Using-the-output-of-run-inside-of-if-condition/td-p/33920
-        run: |
-          echo $JOB
-          echo ::set-output name=wheel::`ls dist`
+      - name: Create wheel for manylinux
+        if: matrix.os == 'ubuntu-latest'
+        uses: RalfG/python-wheels-manylinux-build@v0.2.2-manylinux2010_x86_64
+        with:
+          python-versions: ${{ format('cp{0}{1}-cp{0}{1}m', matrix.python-version[0], matrix.python-version[1]) }}
+          build-requirements: 'setuptools wheel'
+          pip-wheel-args: '-w dist --no-use-pep517 -v --no-deps'
 
       # - name: Install wheel
       #   run: |
@@ -80,6 +76,18 @@ jobs:
       #   run: |
       #     python -c 'from sqlalchemy import cprocessors, cresultproxy, cutils'
 
+      # - name: Test created wheel
+      #   run: |
+      #     pip install pytest pytest-xdist ${{ matrix.extra-requires }}
+      #     pytest -n2 -q test -k 'not MockReconnectTest' --nomemory
+
+      - name: Get wheel name
+        id: wheel-name
+        shell: bash
+        # creates output from https://github.community/t5/GitHub-Actions/Using-the-output-of-run-inside-of-if-condition/td-p/33920
+        run: |
+          echo ::set-output name=wheel::`ls dist`
+
       - name: Upload wheel to release
         uses: actions/upload-release-asset@v1
         env:
@@ -88,21 +96,25 @@ jobs:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: dist/${{ steps.wheel-name.outputs.wheel }}
           asset_name: ${{ steps.wheel-name.outputs.wheel }}
-          asset_content_type: application/zip
-          # application/octet-stream
-      # - name: Test created wheel
-      #   run: |
-      #     pip install pytest pytest-xdist ${{ matrix.extra-requires }}
-      #     pytest -n2 -q test -k 'not MockReconnectTest' --nomemory
+          asset_content_type: application/zip # application/octet-stream
+
+      - name: Set up Python for twine
+        # twine on py2 is very old.
+        # the action 
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
 
       - name: Publish wheel
         env:
           TWINE_USERNAME: __token__
+          # replace TWINE_PASSWORD with token for real pypi
           TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+          # comment TWINE_REPOSITORY_URL to use the real pypi
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
         run: |
           pip install -U twine
-          twine upload dist/*
+          twine upload --skip-existing dist/*
 
 
   # download-artifact@v2 does not work. See https://github.com/actions/download-artifact/issues/23#issuecomment-605435160

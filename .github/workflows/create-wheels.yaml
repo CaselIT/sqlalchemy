@@ -8,7 +8,7 @@ env:
   PYTHONNOUSERSITE: 1
 
 jobs:
-  make-wheel:
+  make-wheel-win-oxs:
     name: ${{ matrix.python-version }}-${{ matrix.architecture }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -49,37 +49,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.architecture }}
 
-      - name: Create wheel windows or osx
-        if: matrix.os != 'ubuntu-latest'
+      - name: Create wheel
         run: |
           python -m pip install --upgrade pip
           pip install setuptools wheel
           pip wheel -w dist --no-use-pep517 -v .
-
-      - name: Create python PEP 425 tag for manylinux build
-        id: linux-py-version
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          pyversion: ${{ matrix.python-version }}
-        run: |
-          pv="${pyversion/./}"
-          [ "$pv" -lt "38" ] && end=m || end=''
-          pytag="cp${pv}-cp${pv}$end"
-          echo $pytag
-          echo "::set-output name=python-version::$pytag"
-
-      - name: Create wheel for manylinux
-        if: matrix.os == 'ubuntu-latest'
-        uses: RalfG/python-wheels-manylinux-build@v0.2.2-manylinux2010_x86_64
-        with:
-          python-versions: ${{ steps.linux-py-version.outputs.python-version }}
-          build-requirements: 'setuptools wheel'
-          pip-wheel-args: '--no-use-pep517 -v --no-deps'
-
-      - name: Rename wheelhouse to dist
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          mv wheelhouse dist
 
       # - name: Install wheel
       #   run: |
@@ -132,6 +106,119 @@ jobs:
         run: |
           pip install -U twine
           twine upload --skip-existing dist/*
+
+  make-wheel-linux:
+    name: ${{ matrix.python-version }}-${{ matrix.architecture }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - 'ubuntu-latest'
+        python-version:
+          - '2.7'
+          # - '3.5'
+          # - '3.6'
+          # - '3.7'
+          - '3.8'
+        architecture:
+          - x64
+
+        include:
+          - python-version: '2.7'
+            extra-requires: 'mock'
+
+      fail-fast: false
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
+
+      - name: Create python PEP 425 tag for manylinux build
+        id: linux-py-version
+        env:
+          pyversion: ${{ matrix.python-version }}
+        run: |
+          pv="${pyversion/./}"
+          [ "$pv" -lt "38" ] && end=m || end=''
+          pytag="cp${pv}-cp${pv}$end"
+          echo $pytag
+          echo "::set-output name=python-version::$pytag"
+
+      - name: Create wheel for manylinux
+        uses: RalfG/python-wheels-manylinux-build@v0.2.2-manylinux2010_x86_64
+        # this generates 3 wheels in wheelhouse/. linux, manylinux1 and manylinux2010
+        with:
+          python-versions: ${{ steps.linux-py-version.outputs.python-version }}
+          build-requirements: 'setuptools wheel'
+          pip-wheel-args: '--no-use-pep517 -v --no-deps'
+
+      # - name: Install wheel
+      #   run: |
+      #     pip install -f wheelhouse --no-index sqlalchemy
+
+      # - name: Check c extensions
+      #   # on windows in python 2.7 and 3.5 the cextension fail to build.
+      #   # for python 2.7 visual studio 9 is missing
+      #   # for python 3.5 the linker has an error "cannot run 'rc.exe'"
+      #   if: matrix.os != 'windows-latest' || ( matrix.python-version != '2.7' && matrix.python-version != '3.5' )
+      #   run: |
+      #     python -c 'from sqlalchemy import cprocessors, cresultproxy, cutils'
+
+      # - name: Test created wheel
+      #   run: |
+      #     pip install pytest pytest-xdist ${{ matrix.extra-requires }}
+      #     pytest -n2 -q test -k 'not MockReconnectTest' --nomemory
+
+      - name: Get wheel name
+        id: wheel-name
+        shell: bash
+        # creates output from https://github.community/t5/GitHub-Actions/Using-the-output-of-run-inside-of-if-condition/td-p/33920
+        run: |
+          echo ::set-output name=wheel1::`ls wheelhouse/*manylinux1* name=wheel2010::`ls wheelhouse/*manylinux2010*`
+
+      - name: Upload wheel manylinux1 to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/${{ steps.wheel-name.outputs.wheel1 }}
+          asset_name: ${{ steps.wheel-name.outputs.wheel1 }}
+          asset_content_type: application/zip # application/octet-stream
+
+      - name: Upload wheel manylinux2010 to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/${{ steps.wheel-name.outputs.wheel1 }}
+          asset_name: ${{ steps.wheel-name.outputs.wheel1 }}
+          asset_content_type: application/zip # application/octet-stream
+
+      - name: Set up Python for twine
+        # twine on py2 is very old.
+        # the action 
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+
+      - name: Publish wheel
+        env:
+          TWINE_USERNAME: __token__
+          # replace TWINE_PASSWORD with token for real pypi
+          TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+          # comment TWINE_REPOSITORY_URL to use the real pypi
+          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+        run: |
+          pip install -U twine
+          twine upload --skip-existing dist/*manylinux*
 
 
   # download-artifact@v2 does not work. See https://github.com/actions/download-artifact/issues/23#issuecomment-605435160

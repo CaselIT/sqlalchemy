@@ -20,7 +20,7 @@ env:
 
 jobs:
   run-test:
-    name: ${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.build-type }}
+    name: ${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.build-type }}-${{ matrix.architecture }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -37,6 +37,10 @@ jobs:
         build-type:
           - 'cext'
           - 'nocext'
+        architecture:
+          - x64
+          - x86
+
         exclude:
           # c-extensions fail to build on windows for python 3.5 and 2.7
           - os: 'windows-latest'
@@ -45,6 +49,11 @@ jobs:
           - os: 'windows-latest'
             python-version: '3.5'
             build-type: 'cext'
+          - os: 'ubuntu-latest'
+            architecture: x86
+          - os: 'macos-latest'
+            architecture: x86
+
       fail-fast: true
 
     steps:
@@ -55,6 +64,7 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
 
       - name: Install dependencies
         run: |

@@ -123,7 +123,7 @@ from .types import VARBINARY  # noqa
 from .types import VARCHAR  # noqa
 
 
-__version__ = "1.4.0b1"
+__version__ = "1.4.2b1"
 
 
 def __go(lcls):

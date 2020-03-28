@@ -201,8 +201,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: wheelhouse/${{ steps.wheel-name.outputs.wheel1 }}
-          asset_name: ${{ steps.wheel-name.outputs.wheel1 }}
+          asset_path: wheelhouse/${{ steps.wheel-name.outputs.wheel2010 }}
+          asset_name: ${{ steps.wheel-name.outputs.wheel2010 }}
           asset_content_type: application/zip # application/octet-stream
 
       - name: Set up Python for twine

@@ -56,6 +56,7 @@ jobs:
       - name: Install wheel
         run: |
           pip install -f dist --no-index sqlalchemy
+          python -c 'from sqlalchemy import cprocessors, cresultproxy, cutils'
 
       - name: Test created wheel
         run: |
@@ -78,7 +79,12 @@ jobs:
       - name: Download single wheels
         uses: actions/download-artifact@v2-preview
         with:
-          path: wheels
+          path: single
+
+      - name: Move in single folder
+        run: |
+          mkdir wheels
+          mv single/**/whl wheels
 
       - name: Upload wheel
         uses: actions/upload-artifact@v1

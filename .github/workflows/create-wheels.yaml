@@ -22,14 +22,14 @@ jobs:
       matrix:
         os:
           - 'ubuntu-latest'
-          # - 'windows-latest'
-          # - 'macos-latest'
+          - 'windows-latest'
+          - 'macos-latest'
         python-version:
           - '2.7'
-          # - '3.5'
-          # - '3.6'
+          - '3.5'
+          - '3.6'
           - '3.7'
-          # - '3.8'
+          - '3.8'
         include:
           - python-version: '2.7'
           - extra-requires: 'mock'
@@ -76,37 +76,119 @@ jobs:
           name: single-wheel-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist
 
+  # download-artifact@v2 does not work. See https://github.com/actions/download-artifact/issues/23#issuecomment-605435160
+  # create-artifact:
+
+  #   name: Create a single artifact with all the wheels
+  #   runs-on: 'ubuntu-latest'
+  #   needs: make-wheel
+
+  #   steps:
+  #     - name: Download single wheels
+  #       uses: actions/download-artifact@v2-preview
+  #       with:
+  #         path: single
+
+  #     - name: Move in single folder
+  #       shell: bash
+  #       run: |
+  #         mkdir wheels
+  #         mv single/**/*.whl wheels
+
+  #     - name: Upload wheel
+  #       uses: actions/upload-artifact@v1
+  #       with:
+  #         name: all-wheels
+  #         path: wheels
+
   create-artifact:
     name: Create a single artifact with all the wheels
     runs-on: 'ubuntu-latest'
     needs: make-wheel
 
     steps:
-
-      # - name: Download single wheels
-      #   uses: actions/download-artifact@v2-preview
-      #   with:
-      #     path: single
-
-      - uses: actions/download-artifact@v1
-        with:
-          name: single-wheel-ubuntu-latest-3.7
-          path: single
-      - uses: actions/download-artifact@v1
+      - name: Download single-wheel-ubuntu-latest-2.7
+        uses: actions/download-artifact@v1
         with:
           name: single-wheel-ubuntu-latest-2.7
-          path: single
+          path: wheels
+      - name: Download single-wheel-ubuntu-latest-3.5
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-ubuntu-latest-3.5
+          path: wheels
+      - name: Download single-wheel-ubuntu-latest-3.6
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-ubuntu-latest-3.6
+          path: wheels
+      - name: Download single-wheel-ubuntu-latest-3.7
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-ubuntu-latest-3.7
+          path: wheels
+      - name: Download single-wheel-ubuntu-latest-3.8
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-ubuntu-latest-3.8
+          path: wheels
 
-      # - name: Move in single folder
-      #   shell: bash
-      #   run: |
-      #     mkdir wheels
-      #     mv single/**/*.whl wheels
+      - name: Download single-wheel-windows-latest-2.7
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-windows-latest-2.7
+          path: wheels
+      - name: Download single-wheel-windows-latest-3.5
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-windows-latest-3.5
+          path: wheels
+      - name: Download single-wheel-windows-latest-3.6
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-windows-latest-3.6
+          path: wheels
+      - name: Download single-wheel-windows-latest-3.7
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-windows-latest-3.7
+          path: wheels
+      - name: Download single-wheel-windows-latest-3.8
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-windows-latest-3.8
+          path: wheels
+
+      - name: Download single-wheel-macos-latest-2.7
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-macos-latest-2.7
+          path: wheels
+      - name: Download single-wheel-macos-latest-3.5
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-macos-latest-3.5
+          path: wheels
+      - name: Download single-wheel-macos-latest-3.6
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-macos-latest-3.6
+          path: wheels
+      - name: Download single-wheel-macos-latest-3.7
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-macos-latest-3.7
+          path: wheels
+      - name: Download single-wheel-macos-latest-3.8
+        uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-macos-latest-3.8
+          path: wheels
+
 
       - name: Upload wheel
         uses: actions/upload-artifact@v1
         with:
           name: all-wheels
-          # path: wheels
-          path: single
+          path: wheels
 

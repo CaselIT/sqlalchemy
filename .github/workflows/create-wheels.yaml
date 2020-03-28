@@ -181,8 +181,9 @@ jobs:
         shell: bash
         # creates output from https://github.community/t5/GitHub-Actions/Using-the-output-of-run-inside-of-if-condition/td-p/33920
         run: |
-          echo ::set-output name=wheel1::`ls wheelhouse/*manylinux1*`
-          echo ::set-output name=wheel2010::`ls wheelhouse/*manylinux2010*`
+          cd wheelhouse
+          echo ::set-output name=wheel1::`ls *manylinux1*`
+          echo ::set-output name=wheel2010::`ls *manylinux2010*`
 
       - name: Upload wheel manylinux1 to release
         uses: actions/upload-release-asset@v1

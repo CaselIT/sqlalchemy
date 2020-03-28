@@ -134,7 +134,7 @@ def run_setup(with_cext):
         kwargs["ext_modules"] = []
 
     setup(
-        name="SQLAlchemy-test-caselit",
+        name="SQLAlchemy",
         version=VERSION,
         description="Database Abstraction Library",
         author="Mike Bayer",

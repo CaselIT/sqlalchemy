@@ -64,7 +64,7 @@ jobs:
         run: |
           pv="${pyversion/./}"
           echo $pv
-          pytag="cp$pv-cp$pvm"
+          pytag="cp${pv}-cp${pv}m"
           echo "::set-output name=python-version::$pytag"
 
       - name: Create wheel for manylinux

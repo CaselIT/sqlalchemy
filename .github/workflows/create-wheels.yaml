@@ -83,20 +83,30 @@ jobs:
 
     steps:
 
-      - name: Download single wheels
-        uses: actions/download-artifact@v2-preview
+      # - name: Download single wheels
+      #   uses: actions/download-artifact@v2-preview
+      #   with:
+      #     path: single
+
+      - uses: actions/download-artifact@v1
         with:
+          name: single-wheel-ubuntu-latest-3.7
+          path: single
+      - uses: actions/download-artifact@v1
+        with:
+          name: single-wheel-ubuntu-latest-2.7
           path: single
 
-      - name: Move in single folder
-        shell: bash
-        run: |
-          mkdir wheels
-          mv single/**/*.whl wheels
+      # - name: Move in single folder
+      #   shell: bash
+      #   run: |
+      #     mkdir wheels
+      #     mv single/**/*.whl wheels
 
       - name: Upload wheel
         uses: actions/upload-artifact@v1
         with:
           name: all-wheels
-          path: wheels
+          # path: wheels
+          path: single
 

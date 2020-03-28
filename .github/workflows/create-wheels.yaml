@@ -63,8 +63,9 @@ jobs:
           pyversion: ${{ matrix.python-version }}
         run: |
           pv="${pyversion/./}"
-          echo $pv
-          pytag="cp${pv}-cp${pv}m"
+          [ "$pv" -lt "38" ] && end=m || end=''
+          pytag="cp${pv}-cp${pv}$end"
+          echo $pytag
           echo "::set-output name=python-version::$pytag"
 
       - name: Create wheel for manylinux
@@ -73,7 +74,12 @@ jobs:
         with:
           python-versions: ${{ steps.linux-py-version.outputs.python-version }}
           build-requirements: 'setuptools wheel'
-          pip-wheel-args: '-w dist --no-use-pep517 -v --no-deps'
+          pip-wheel-args: '--no-use-pep517 -v --no-deps'
+
+      - name: Rename wheelhouse to dist
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mv wheelhouse dist
 
       # - name: Install wheel
       #   run: |

@@ -2,11 +2,11 @@ name: Run tests
 
 on:
   push:
-    # branches:
-    #   - master
-    # paths-ignore:
-    #   - 'doc/**'
-    #   - 'examples/**'
+    branches:
+      - master
+    paths-ignore:
+      - 'doc/**'
+      - 'examples/**'
   pull_request:
     branches:
       - master
@@ -20,7 +20,7 @@ env:
 
 jobs:
   run-test:
-    name: ${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.build-type }}-${{ matrix.architecture }}
+    name: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.build-type }}-${{ matrix.architecture }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

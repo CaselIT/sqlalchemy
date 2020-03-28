@@ -62,7 +62,7 @@ jobs:
         id: wheel-name
         shell: bash
         env:
-          JOB: ${{ toJSON(job) }}
+          JOB: ${{ toJSON( github.event) }}
         # creates output from https://github.community/t5/GitHub-Actions/Using-the-output-of-run-inside-of-if-condition/td-p/33920
         run: |
           echo $JOB
@@ -86,7 +86,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: disc/${{ steps.wheel-name.outputs.wheel }}
+          asset_path: dist/${{ steps.wheel-name.outputs.wheel }}
           asset_name: ${{ steps.wheel-name.outputs.wheel }}
           asset_content_type: application/zip
           # application/octet-stream

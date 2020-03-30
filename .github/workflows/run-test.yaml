@@ -60,11 +60,11 @@ jobs:
           - python-version: 'pypy2'
             architecture: x86
           - python-version: 'pypy2'
-            architecture: cext
+            build-type: cext
           - python-version: 'pypy3'
-            architecture: x64
+            architecture: x86
           - python-version: 'pypy3'
-            architecture: cext
+            build-type: cext
 
 
       fail-fast: true

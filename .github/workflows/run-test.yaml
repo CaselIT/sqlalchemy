@@ -29,11 +29,13 @@ jobs:
           - 'windows-latest'
           - 'macos-latest'
         python-version:
-          - '2.7'
-          - '3.5'
-          - '3.6'
-          - '3.7'
-          - '3.8'
+          # - '2.7'
+          # - '3.5'
+          # - '3.6'
+          # - '3.7'
+          # - '3.8'
+          - 'pypy2'
+          - 'pypy3'
         build-type:
           - 'cext'
           - 'nocext'
@@ -49,10 +51,21 @@ jobs:
           - os: 'windows-latest'
             python-version: '3.5'
             build-type: 'cext'
+          # no x86 on ubuntu and mac
           - os: 'ubuntu-latest'
             architecture: x86
           - os: 'macos-latest'
             architecture: x86
+          # only one architecture in pypy. Also no cext
+          - python-version: 'pypy2'
+            architecture: x86
+          - python-version: 'pypy2'
+            architecture: cext
+          - python-version: 'pypy3'
+            architecture: x64
+          - python-version: 'pypy3'
+            architecture: cext
+
 
       fail-fast: true
 

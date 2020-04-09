@@ -216,7 +216,7 @@ jobs:
         run: |
           pip install -U pip wheel
           pip --version
-          version=`python -W ignore -c 'from wheel.pep425tags import get_abbr_impl, get_impl_ver, get_abi_tag; print("{0}{1}-{2}".format(get_abbr_impl(), get_impl_ver(), get_abi_tag()))'
+          version=`python -W ignore -c 'from wheel.pep425tags import get_abbr_impl, get_impl_ver, get_abi_tag; print("{0}{1}-{2}".format(get_abbr_impl(), get_impl_ver(), get_abi_tag()))'`
           echo Wheel tag $PY_TAG. Installed version $version.
           if [[ "${{ matrix.python-version }}" = "$version" ]]
           then

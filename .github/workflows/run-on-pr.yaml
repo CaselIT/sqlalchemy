@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - master
+      - "workflow_test_*"
     paths-ignore:
       - "doc/**"
       - "examples/**"

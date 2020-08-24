@@ -5,7 +5,6 @@ on:
   pull_request:
     branches:
       - master
-      - "workflow_test_*"
     paths-ignore:
       - "doc/**"
       - "examples/**"
@@ -53,32 +52,33 @@ jobs:
       - name: Run tests
         run: tox -e github-${{ matrix.build-type }} -- -q --nomemory ${{ matrix.pytest-args }}
 
-  run-test-arm64:
-    name: ${{ matrix.python-version }}-${{ matrix.build-type }}-arm64-ubuntu-latest
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version:
-          - "3.8"
-        build-type:
-          - "cext"
-          - "nocext"
-      fail-fast: true
+  # Arm emulation is quite slow (~20min) so for now just run it when merging to master
+  # run-test-arm64:
+  #   name: ${{ matrix.python-version }}-${{ matrix.build-type }}-arm64-ubuntu-latest
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version:
+  #         - "3.8"
+  #       build-type:
+  #         - "cext"
+  #         - "nocext"
+  #     fail-fast: true
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v2
 
-      - name: Enable qemu
-        run: |
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  #     - name: Set up emulation
+  #       run: |
+  #         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-      - name: Run tests
-        uses: docker://arm64v8/python:3.8-buster
-        with:
-          args: |
-                bash -c "
-                python -m pip install --upgrade pip &&
-                pip install --upgrade tox setuptools &&
-                pip list &&
-                tox -e github-${{ matrix.build-type }} -- -q --nomemory ${{ matrix.pytest-args }}"
+  #     - name: Run tests
+  #       uses: docker://arm64v8/python:3.8-buster
+  #       with:
+  #         args: |
+  #               bash -c "
+  #               python -m pip install --upgrade pip &&
+  #               pip install --upgrade tox setuptools &&
+  #               pip list &&
+  #               tox -e github-${{ matrix.build-type }} -- -q --nomemory ${{ matrix.pytest-args }}"

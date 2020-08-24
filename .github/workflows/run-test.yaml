@@ -115,7 +115,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker run --rm --privileged arm64v8/python:${{ matrix.python-version }} bash -c "
+          /usr/bin/docker run --workdir /github/workspace -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/falcon/falcon":"/github/workspace" --rm arm64v8/python:${{ matrix.python-version }} /bin/bash -c "
           python -m pip install --upgrade pip &&
           pip install --upgrade tox setuptools &&
           pip list &&

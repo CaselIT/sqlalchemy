@@ -15,7 +15,6 @@ jobs:
   # two jobs are defined make-wheel-win-osx and make-wheel-linux.
   # they do the the same steps, but linux wheels need to be build to target manylinux
   make-wheel-win-osx:
-    if: "false"
     name: ${{ matrix.python-version }}-${{ matrix.architecture }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -128,14 +127,13 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+          TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+          # TWINE_PASSWORD: ${{ secrets.pypi_token }}
         run: |
           pip install -U twine
           twine upload --skip-existing dist/*
 
   make-wheel-linux:
-    if: "false"
     name: ${{ matrix.python-version }}-${{ matrix.architecture }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -280,8 +278,8 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+          TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+          # TWINE_PASSWORD: ${{ secrets.pypi_token }}
         run: |
           pip install -U twine
           twine upload --skip-existing dist/*manylinux*

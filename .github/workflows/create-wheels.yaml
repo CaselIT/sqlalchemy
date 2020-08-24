@@ -70,15 +70,15 @@ jobs:
         # this flag should be removed once sqlalchemy supports pep517
         # `--no-deps` is used to only generate the wheel for the current library. Redundant in sqlalchemy since it has no dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip --version
-          pip install setuptools>=44 wheel>=0.34
+          python -m pip install --upgrade pip &&
+          pip --version &&
+          pip install setuptools>=44 wheel>=0.34 &&
           pip wheel -w dist --no-use-pep517 -v --no-deps .
 
       - name: Install wheel
         # install the created wheel without using the pypi index
         run: |
-          pip install greenlet "importlib-metadata;python_version<'3.8'"
+          pip install greenlet "importlib-metadata;python_version<'3.8'" &&
           pip install -f dist --no-index sqlalchemy
 
       - name: Check c extensions

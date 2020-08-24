@@ -79,7 +79,7 @@ jobs:
       - name: Install wheel
         # install the created wheel without using the pypi index
         run: |
-          pip install greenlet
+          pip install greenlet "importlib-metadata;python_version<'3.8'"
           pip install -f dist --no-index sqlalchemy
 
       - name: Check c extensions
@@ -220,7 +220,7 @@ jobs:
           pip install packaging>=20.4
           if python .github/workflows/scripts/can_install.py "${{ matrix.python-version }}"
           then
-            pip install greenlet
+            pip install greenlet "importlib-metadata;python_version<'3.8'"
             pip install -f dist --no-index sqlalchemy
             python -c 'from sqlalchemy import cprocessors, cresultproxy, cutils'
             pip install pytest pytest-xdist ${{ matrix.extra-requires }}
@@ -358,7 +358,7 @@ jobs:
             bash -c "
             export PATH=/opt/python/${{ matrix.python-version }}/bin:$PATH &&
             python --version &&
-            pip install greenlet &&
+            pip install greenlet \"importlib-metadata;python_version<'3.8'\" &&
             pip install -f dist --no-index sqlalchemy &&
             python -c 'from sqlalchemy import cprocessors, cresultproxy, cutils' &&
             pip install pytest pytest-xdist ${{ matrix.extra-requires }} &&

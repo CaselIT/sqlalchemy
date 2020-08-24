@@ -20,6 +20,7 @@ jobs:
   run-test:
     name: ${{ matrix.python-version }}-${{ matrix.build-type }}-${{ matrix.architecture }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    if: "false"
     strategy:
       # run this job using this matrix, excluding some combinations below.
       matrix:
@@ -94,6 +95,7 @@ jobs:
     strategy:
       matrix:
         python-version:
+          - "3.5"
           - "3.6"
           - "3.7"
           - "3.8"
@@ -113,7 +115,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker run --rm arm64v8/python:${{ matrix.python-version }} bash -c "
+          docker run --rm --privileged arm64v8/python:${{ matrix.python-version }} bash -c "
           python -m pip install --upgrade pip &&
           pip install --upgrade tox setuptools &&
           pip list &&

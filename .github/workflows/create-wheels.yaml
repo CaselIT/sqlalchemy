@@ -9,7 +9,7 @@ env:
   # set this so the sqlalchemy test uses the installed version and not the local one
   PYTHONNOUSERSITE: 1
   # comment TWINE_REPOSITORY_URL to use the real pypi. NOTE: change also the secret used in TWINE_PASSWORD
-  # TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+  TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
 jobs:
   # two jobs are defined make-wheel-win-osx and make-wheel-linux.
@@ -108,17 +108,17 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: Publish wheel
-        # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
-        # additional options
-        env:
-          TWINE_USERNAME: __token__
-          # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
-        run: |
-          pip install -U twine
-          twine upload --skip-existing dist/*
+      # - name: Publish wheel
+      #   # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
+      #   # additional options
+      #   env:
+      #     TWINE_USERNAME: __token__
+      #     # replace TWINE_PASSWORD with token for real pypi
+      #     # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+      #     TWINE_PASSWORD: ${{ secrets.pypi_token }}
+      #   run: |
+      #     pip install -U twine
+      #     twine upload --skip-existing dist/*
 
   make-wheel-linux:
     name: ${{ matrix.python-version }}-${{ matrix.architecture }}-${{ matrix.os }}
@@ -260,20 +260,20 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: Publish wheel
-        # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
-        # additional options
-        # We upload both manylinux1 and manylinux2010 wheels. pip will download the appropriate one according to the system.
-        # manylinux1 is an older format and is now not very used since many environments can use manylinux2010
-        # currently (April 2020) manylinux2014 is still wip, so we do not generate it.
-        env:
-          TWINE_USERNAME: __token__
-          # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
-        run: |
-          pip install -U twine
-          twine upload --skip-existing dist/*manylinux*
+      # - name: Publish wheel
+      #   # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
+      #   # additional options
+      #   # We upload both manylinux1 and manylinux2010 wheels. pip will download the appropriate one according to the system.
+      #   # manylinux1 is an older format and is now not very used since many environments can use manylinux2010
+      #   # currently (April 2020) manylinux2014 is still wip, so we do not generate it.
+      #   env:
+      #     TWINE_USERNAME: __token__
+      #     # replace TWINE_PASSWORD with token for real pypi
+      #     # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+      #     TWINE_PASSWORD: ${{ secrets.pypi_token }}
+      #   run: |
+      #     pip install -U twine
+      #     twine upload --skip-existing dist/*manylinux*
 
   make-wheel-linux-arm64:
     name: ${{ matrix.python-version }}-arm64-${{ matrix.os }}
@@ -367,15 +367,15 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: Publish wheel
-        # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
-        # additional options
-        # We upload manylinux2014 arm64 wheels. pip will download the appropriate one according to the system.
-        env:
-          TWINE_USERNAME: __token__
-          # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
-        run: |
-          pip install -U twine
-          twine upload --skip-existing dist/*manylinux*
+      # - name: Publish wheel
+      #   # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
+      #   # additional options
+      #   # We upload manylinux2014 arm64 wheels. pip will download the appropriate one according to the system.
+      #   env:
+      #     TWINE_USERNAME: __token__
+      #     # replace TWINE_PASSWORD with token for real pypi
+      #     # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+      #     TWINE_PASSWORD: ${{ secrets.pypi_token }}
+      #   run: |
+      #     pip install -U twine
+      #     twine upload --skip-existing dist/*manylinux*

@@ -18,18 +18,18 @@ jobs:
         include:
           - os: windows-2022
             wheel_mode: compiled
-          - os: macos-12
-            wheel_mode: compiled
-          # emulated wheels on linux take too much time, so run two jobs
-          - os: ubuntu-22.04
-            wheel_mode: compiled
-            linux_archs: "x86_64"
-          - os: ubuntu-22.04
-            wheel_mode: compiled
-            linux_archs: "aarch64"
-          # create pure python build
-          - os: ubuntu-22.04
-            wheel_mode: pure-python
+          # - os: macos-12
+          #   wheel_mode: compiled
+          # # emulated wheels on linux take too much time, so run two jobs
+          # - os: ubuntu-22.04
+          #   wheel_mode: compiled
+          #   linux_archs: "x86_64"
+          # - os: ubuntu-22.04
+          #   wheel_mode: compiled
+          #   linux_archs: "aarch64"
+          # # create pure python build
+          # - os: ubuntu-22.04
+          #   wheel_mode: pure-python
 
       fail-fast: false
 

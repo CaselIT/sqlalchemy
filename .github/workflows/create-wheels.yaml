@@ -7,7 +7,7 @@ on:
 
 env:
   # comment TWINE_REPOSITORY_URL to use the real pypi. NOTE: change also the secret used in TWINE_PASSWORD
-  # TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+  TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
 jobs:
   build_wheels:
@@ -36,18 +36,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Remove tag_build from setup.cfg
-        # sqlalchemy has `tag_build` set to `dev` in setup.cfg. We need to remove it before creating the weel
-        # otherwise it gets tagged with `dev0`
-        shell: pwsh
-        # This is equivalent to the sed commands:
-        # `sed -i '/tag_build=dev/d' setup.cfg`
-        # `sed -i '/tag_build = dev/d' setup.cfg`
+      # - name: Remove tag_build from setup.cfg
+      #   # sqlalchemy has `tag_build` set to `dev` in setup.cfg. We need to remove it before creating the weel
+      #   # otherwise it gets tagged with `dev0`
+      #   shell: pwsh
+      #   # This is equivalent to the sed commands:
+      #   # `sed -i '/tag_build=dev/d' setup.cfg`
+      #   # `sed -i '/tag_build = dev/d' setup.cfg`
 
-        # `-replace` uses a regexp match
-        # alternative form: `(get-content setup.cfg) | foreach-object{$_ -replace "tag_build.=.dev",""} | set-content setup.cfg`
-        run: |
-          (cat setup.cfg) | %{$_ -replace "tag_build.?=.?dev",""} | set-content setup.cfg
+      #   # `-replace` uses a regexp match
+      #   # alternative form: `(get-content setup.cfg) | foreach-object{$_ -replace "tag_build.=.dev",""} | set-content setup.cfg`
+      #   run: |
+      #     (cat setup.cfg) | %{$_ -replace "tag_build.?=.?dev",""} | set-content setup.cfg
 
       # See details at https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
       - name: Set up QEMU on linux
@@ -94,8 +94,8 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+          TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+          # TWINE_PASSWORD: ${{ secrets.pypi_token }}
         run: |
           pip install -U twine
           twine upload --skip-existing ./wheelhouse/*

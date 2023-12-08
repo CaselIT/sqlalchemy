@@ -8,9 +8,9 @@ on:
   #   branches:
   #     - "go_wheel_*"
 
-# env:
-#   # comment TWINE_REPOSITORY_URL to use the real pypi. NOTE: change also the secret used in TWINE_PASSWORD
-#   TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+env:
+  # comment TWINE_REPOSITORY_URL to use the real pypi. NOTE: change also the secret used in TWINE_PASSWORD
+  TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
 jobs:
   build_wheels:
@@ -111,8 +111,8 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+          TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+          # TWINE_PASSWORD: ${{ secrets.pypi_token }}
         run: |
           pip install -U twine
           twine upload --skip-existing ./wheelhouse/*

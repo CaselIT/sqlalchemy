@@ -269,7 +269,7 @@ from .types import Uuid as Uuid
 from .types import VARBINARY as VARBINARY
 from .types import VARCHAR as VARCHAR
 
-__version__ = "2.1.0a1"
+__version__ = "2.1.0a2"
 
 
 def __go(lcls: Any) -> None:

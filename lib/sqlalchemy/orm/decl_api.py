@@ -1221,11 +1221,8 @@ class registry:
 
         self.type_annotation_map.update(
             {
-                sub_type: sqltype
+                compat_typing.de_optionalize_union_types(typ): sqltype
                 for typ, sqltype in type_annotation_map.items()
-                for sub_type in compat_typing.expand_unions(
-                    typ, include_union=True, discard_none=True
-                )
             }
         )
 

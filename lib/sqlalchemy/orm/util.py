@@ -124,7 +124,7 @@ if typing.TYPE_CHECKING:
     from ..sql.selectable import Selectable
     from ..sql.visitors import anon_map
     from ..util.typing import _AnnotationScanType
-    from ..util.typing import ArgsTypeProcotol
+    from ..util.typing import ArgsTypeProtocol
 
 _T = TypeVar("_T", bound=Any)
 
@@ -178,7 +178,7 @@ class _DeStringifyUnionElements(Protocol):
     def __call__(
         self,
         cls: Type[Any],
-        annotation: ArgsTypeProcotol,
+        annotation: ArgsTypeProtocol,
         originating_module: str,
         *,
         str_cleanup_fn: Optional[Callable[[str, str], str]] = None,

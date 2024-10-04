@@ -88,7 +88,7 @@ _AnnotationScanType = Union[
 ]
 
 
-class ArgsTypeProcotol(Protocol):
+class ArgsTypeProtocol(Protocol):
     """protocol for types that have ``__args__``
 
     there's no public interface for this AFAIK
@@ -332,7 +332,7 @@ def resolve_name_to_real_class_name(name: str, module_name: str) -> str:
 
 def de_stringify_union_elements(
     cls: Type[Any],
-    annotation: ArgsTypeProcotol,
+    annotation: ArgsTypeProtocol,
     originating_module: str,
     locals_: Mapping[str, Any],
     *,
@@ -380,6 +380,27 @@ def is_generic(type_: _AnnotationScanType) -> TypeGuard[GenericProtocol[Any]]:
 
 def is_pep695(type_: _AnnotationScanType) -> TypeGuard[TypeAliasType]:
     return isinstance(type_, TypeAliasType)
+
+
+def pep695_value(
+    type_: _AnnotationScanType,
+    *,
+    deep=True,
+    _seen: set[_AnnotationScanType] | None = None,
+) -> _AnnotationScanType:
+    if _seen is None:
+        _seen = set()
+    if type_ in _seen:
+        # recursion are not supported (at least it's flagged as an error by pyright)
+        return type_
+    _seen.add(type_)
+    if not is_pep695(type_):
+        return type_
+    value = type_.__value__
+    if not deep or not is_union(value):
+        return value
+    return make_union_type(*(pep695_value(t, deep=deep, _seen=_seen) for t in value.__args__))
+    # return tuple(*(pep695_value(t, deep=deep, _seen=_seen) for t in value.__args__))
 
 
 def flatten_newtype(type_: NewType) -> Type[Any]:
@@ -498,9 +519,10 @@ def expand_unions(
         return (type_,)
 
 
-def is_optional(type_: Any) -> TypeGuard[ArgsTypeProcotol]:
+def is_optional(type_: Any) -> TypeGuard[ArgsTypeProtocol]:
+    # REMOVE
     return is_origin_of(
-        type_,
+        pep695_value(type_),
         "Optional",
         "Union",
         "UnionType",
@@ -511,8 +533,9 @@ def is_optional_union(type_: Any) -> bool:
     return is_optional(type_) and NoneType in typing_get_args(type_)
 
 
-def is_union(type_: Any) -> TypeGuard[ArgsTypeProcotol]:
-    return is_origin_of(type_, "Union")
+def is_union(type_: Any) -> TypeGuard[ArgsTypeProtocol]:
+    # is union like
+    return is_origin_of(pep695_value(type_), "Union", "UnionType")
 
 
 def is_origin_of_cls(

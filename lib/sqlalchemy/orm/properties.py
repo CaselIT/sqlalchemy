@@ -764,6 +764,7 @@ class MappedColumn(
         our_original_type = our_type
 
         if is_pep695(our_type):
+            # TODO: this does not handle recursive pep695
             our_type = our_type.__value__
 
         if is_pep593(our_type):

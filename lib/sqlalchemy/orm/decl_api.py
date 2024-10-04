@@ -72,12 +72,11 @@ from ..sql.selectable import FromClause
 from ..util import hybridmethod
 from ..util import hybridproperty
 from ..util import typing as compat_typing
-from ..util.typing import CallableReference
+from ..util.typing import CallableReference, pep695_value
 from ..util.typing import flatten_newtype
 from ..util.typing import is_generic
 from ..util.typing import is_literal
 from ..util.typing import is_newtype
-from ..util.typing import is_pep695
 from ..util.typing import Literal
 from ..util.typing import Self
 
@@ -1230,9 +1229,7 @@ class registry:
         self, python_type: _MatchedOnType
     ) -> Optional[sqltypes.TypeEngine[Any]]:
 
-        python_type_to_check = python_type
-        while is_pep695(python_type_to_check):
-            python_type_to_check = python_type_to_check.__value__
+        python_type_to_check = pep695_value(python_type)
 
         check_is_pt = python_type is python_type_to_check
 

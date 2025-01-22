@@ -30,6 +30,7 @@ jobs:
           # TODO: macos-14 uses arm macs (only python 3.10+) - make arm wheel on it
           - "macos-13"
           - "ubuntu-22.04"
+          - "ubuntu-22.04-arm"
         linux_archs:
           # this is only meaningful on linux. windows and macos ignore exclude all but one arch
           - "aarch64"
@@ -39,13 +40,17 @@ jobs:
           # create pure python build
           - os: ubuntu-22.04
             wheel_mode: pure-python
-            python: "cp-311*"
+            python: "cp-312*"
 
         exclude:
           - os: "windows-2022"
             linux_archs: "aarch64"
           - os: "macos-13"
             linux_archs: "aarch64"
+          - os: "ubuntu-22.04"
+            linux_archs: "aarch64"
+          - os: "ubuntu-22.04-arm"
+            linux_archs: "x86_64"
 
       fail-fast: false
 
@@ -65,11 +70,11 @@ jobs:
           (get-content pyproject.toml) | %{$_ -replace 'tag-build.?=.?"dev"',""} | set-content pyproject.toml
 
       # See details at https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
-      - name: Set up QEMU on linux
-        if: ${{ runner.os == 'Linux' }}
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
+      # - name: Set up QEMU on linux
+      #   if: ${{ runner.os == 'Linux' }}
+      #   uses: docker/setup-qemu-action@v3
+      #   with:
+      #     platforms: all
 
       - name: Build compiled wheels
         if: ${{ matrix.wheel_mode == 'compiled' }}
@@ -106,14 +111,14 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           files: './wheelhouse/*.whl'
 
-      - name: Publish wheel
-        # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
-        # additional options
-        env:
-          TWINE_USERNAME: __token__
-          # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
-        run: |
-          pip install -U twine
-          twine upload --skip-existing ./wheelhouse/*
+      # - name: Publish wheel
+      #   # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
+      #   # additional options
+      #   env:
+      #     TWINE_USERNAME: __token__
+      #     # replace TWINE_PASSWORD with token for real pypi
+      #     # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
+      #     TWINE_PASSWORD: ${{ secrets.pypi_token }}
+      #   run: |
+      #     pip install -U twine
+      #     twine upload --skip-existing ./wheelhouse/*

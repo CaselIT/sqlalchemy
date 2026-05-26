@@ -4,18 +4,20 @@ on:
   # run when a release has been created
   release:
     types: [created]
-  # push:
-  #   branches:
-  #     - "go_wheel_*"
+  push:
+    branches:
+      - "trusted_publisher*"
 
-# env:
-#   # comment TWINE_REPOSITORY_URL to use the real pypi. NOTE: change also the secret used in TWINE_PASSWORD
-#   TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+env:
+  # comment TWINE_REPOSITORY_URL to use the real pypi. NOTE: change also the secret used in TWINE_PASSWORD
+  TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
 jobs:
   build_wheels:
     name: ${{ matrix.wheel_mode }} wheels ${{ matrix.python }} on ${{ matrix.os }} ${{ matrix.os == 'ubuntu-22.04' && matrix.linux_archs || '' }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      id-token: write # needed for trusted publishers to authenticate to pypi
     strategy:
       matrix:
         # emulated wheels on linux take too much time, split wheels into multiple runs
@@ -76,17 +78,17 @@ jobs:
         with:
           platforms: riscv64
 
-      - name: Remove tag-build from pyproject.toml
-        # sqlalchemy has `tag-build` set to `dev` in pyproject.toml. It needs to be removed before creating the wheel
-        # otherwise it gets tagged with `dev0`
-        shell: pwsh
-        # This is equivalent to the sed commands:
-        # `sed -i '/tag-build="dev"/d' pyproject.toml`
-        # `sed -i '/tag-build = "dev"/d' pyproject.toml`
+      # - name: Remove tag-build from pyproject.toml
+      #   # sqlalchemy has `tag-build` set to `dev` in pyproject.toml. It needs to be removed before creating the wheel
+      #   # otherwise it gets tagged with `dev0`
+      #   shell: pwsh
+      #   # This is equivalent to the sed commands:
+      #   # `sed -i '/tag-build="dev"/d' pyproject.toml`
+      #   # `sed -i '/tag-build = "dev"/d' pyproject.toml`
 
-        # `-replace` uses a regexp match
-        run: |
-          (get-content pyproject.toml) | %{$_ -replace 'tag-build.?=.?"dev"',""} | set-content pyproject.toml
+      #   # `-replace` uses a regexp match
+      #   run: |
+      #     (get-content pyproject.toml) | %{$_ -replace 'tag-build.?=.?"dev"',""} | set-content pyproject.toml
 
       - name: Build compiled wheels
         if: ${{ matrix.wheel_mode == 'compiled' }}
@@ -117,21 +119,27 @@ jobs:
       #   with:
       #     path: ./wheelhouse/*.whl
 
-      - name: Upload wheels to release
-        # upload the generated wheels to the github release
-        uses: sqlalchemyorg/upload-release-assets@sa
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          files: './wheelhouse/*.whl'
+      # - name: Upload wheels to release
+      #   # upload the generated wheels to the github release
+      #   uses: sqlalchemyorg/upload-release-assets@sa
+      #   with:
+      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: './wheelhouse/*.whl'
+
+      - name: Get attestation token
+        run: |
+          pip install .github/workflows/trusted_publishing
+          twine_id --test
+          make_attestation ./wheelhouse
+          ls -l ./wheelhouse
 
       - name: Publish wheel
         # the action https://github.com/marketplace/actions/pypi-publish runs only on linux and we cannot specify
         # additional options
         env:
           TWINE_USERNAME: __token__
-          # replace TWINE_PASSWORD with token for real pypi
-          # TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
-          TWINE_PASSWORD: ${{ secrets.pypi_token }}
+          # this is set by trusted_publishing
+          TWINE_PASSWORD: ${{ env.TWINE_TOKEN }}
         run: |
           python -m pip install -U twine
-          twine upload --skip-existing ./wheelhouse/*
+          twine upload --skip-existing ./wheelhouse/* --attestations

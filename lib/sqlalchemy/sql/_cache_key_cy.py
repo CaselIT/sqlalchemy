@@ -41,6 +41,7 @@ from typing import TYPE_CHECKING
 
 from .visitors import InternalTraversal
 from .. import util
+from ..inspection import inspect
 
 if TYPE_CHECKING:
     from .elements import BindParameter
@@ -190,6 +191,34 @@ class BaseHasCacheKey:
                                 ]
                             ),
                         )
+                    elif kind == _COMPILE_STATE_FUNCS:
+                        result.extend(
+                            tuple((fn.__code__, c_key) for fn, c_key in obj)
+                        )
+                    elif kind == _INSPECTABLE:
+                        result.append(element.name)
+                        result.append(
+                            inspect(obj)._gen_cache_key(am, bindparams)
+                        )
+                    elif kind == _STRING_LIST:
+                        result.extend(tuple(obj))
+                    elif kind == _MULTI:
+                        result.append(element.name)
+                        result.append(
+                            obj._gen_cache_key(am, bindparams)
+                            if isinstance(obj, BaseHasCacheKey)
+                            else obj
+                        )
+                    elif kind == _MULTI_LIST:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                elem._gen_cache_key(am, bindparams)
+                                if isinstance(elem, BaseHasCacheKey)
+                                else elem
+                                for elem in obj
+                            )
+                        )
                     elif kind == _HAS_CACHE_KEY_TUPLES:
                         result.append(element.name)
                         result.append(
@@ -199,6 +228,45 @@ class BaseHasCacheKey:
                                     for elem in tup_elem
                                 )
                                 for tup_elem in obj
+                            )
+                        )
+                    elif kind == _HAS_CACHE_KEY_LIST:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                elem._gen_cache_key(am, bindparams)
+                                for elem in obj
+                            )
+                        )
+                    elif kind == _EXECUTABLE_OPTIONS:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                elem._gen_cache_key(am, bindparams)
+                                for elem in obj
+                                if elem._is_has_cache_key
+                            )
+                        )
+                    elif kind == _INSPECTABLE_LIST:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                inspect(elem)._gen_cache_key(am, bindparams)
+                                for elem in obj
+                            )
+                        )
+                    elif kind == _NAMED_DDL_ELEMENT:
+                        result.append(element.name)
+                        result.append(obj.name)
+                    elif kind == _PREFIX_SEQUENCE:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                (
+                                    clause._gen_cache_key(am, bindparams),
+                                    strval,
+                                )
+                                for clause, strval in obj
                             )
                         )
                     elif kind == _SETUP_JOIN_TUPLE:
@@ -226,6 +294,92 @@ class BaseHasCacheKey:
                                 for target, onclause, from_, flags in obj
                             )
                         )
+                    elif kind == _TABLE_HINT_LIST:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                (
+                                    clause._gen_cache_key(am, bindparams),
+                                    dialect_name,
+                                    text,
+                                )
+                                for (clause, dialect_name), text in obj.items()
+                            )
+                        )
+                    elif kind == _PLAIN_DICT:
+                        result.append(element.name)
+                        result.append(
+                            tuple((key, obj[key]) for key in sorted(obj))
+                        )
+                    elif kind == _DIALECT_OPTIONS:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                (
+                                    dialect_name,
+                                    tuple(
+                                        (key, obj[dialect_name][key])
+                                        for key in sorted(obj[dialect_name])
+                                    ),
+                                )
+                                for dialect_name in sorted(obj)
+                            )
+                        )
+                    elif kind == _STRING_CLAUSEELEMENT_DICT:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                (
+                                    key,
+                                    obj[key]._gen_cache_key(am, bindparams),
+                                )
+                                for key in sorted(obj)
+                            )
+                        )
+                    elif kind == _STRING_MULTI_DICT:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                (
+                                    key,
+                                    (
+                                        value._gen_cache_key(am, bindparams)
+                                        if isinstance(
+                                            value, BaseHasCacheKey
+                                        )
+                                        else value
+                                    ),
+                                )
+                                for key, value in (
+                                    (key, obj[key]) for key in sorted(obj)
+                                )
+                            )
+                        )
+                    elif kind == _CANONICAL_COLUMN_COLLECTION:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                col._gen_cache_key(am, bindparams)
+                                for _, col, _ in obj._collection
+                            )
+                        )
+                    elif kind == _NO_CACHE_TRAVERSAL:
+                        am[_NO_CACHE] = True
+                    elif kind == _DML_ORDERED_VALUES:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                (
+                                    (
+                                        key._gen_cache_key(am, bindparams)
+                                        if hasattr(key, "__clause_element__")
+                                        else key
+                                    ),
+                                    value._gen_cache_key(am, bindparams),
+                                )
+                                for key, value in obj
+                            )
+                        )
                     elif kind == _DML_VALUES:
                         result.append(element.name)
                         result.append(
@@ -241,6 +395,12 @@ class BaseHasCacheKey:
                                 for key in obj
                             )
                         )
+                    elif kind == _PARAMS:
+                        if CacheConst.PARAMS in am:
+                            to_set = am[CacheConst.PARAMS] | obj
+                        else:
+                            to_set = obj
+                        am[CacheConst.PARAMS] = to_set
                     elif kind == _PY_METHOD:
                         py_method = element  # type: ignore[assignment]
                         result.extend(
@@ -270,9 +430,32 @@ if cython.compiled:
     _ANNOTATIONS_KEY = cython.declare(cython.const[cython.int], 5)
     _CLAUSEELEMENT_LIST = cython.declare(cython.const[cython.int], 6)
     _PY_METHOD = cython.declare(cython.const[cython.int], 7)
+    _COMPILE_STATE_FUNCS = cython.declare(cython.const[cython.int], 8)
+    _INSPECTABLE = cython.declare(cython.const[cython.int], 9)
+    _STRING_LIST = cython.declare(cython.const[cython.int], 10)
+    _MULTI = cython.declare(cython.const[cython.int], 11)
+    _MULTI_LIST = cython.declare(cython.const[cython.int], 12)
     _HAS_CACHE_KEY_TUPLES = cython.declare(cython.const[cython.int], 13)
+    _HAS_CACHE_KEY_LIST = cython.declare(cython.const[cython.int], 14)
+    _EXECUTABLE_OPTIONS = cython.declare(cython.const[cython.int], 15)
+    _INSPECTABLE_LIST = cython.declare(cython.const[cython.int], 16)
+    _NAMED_DDL_ELEMENT = cython.declare(cython.const[cython.int], 18)
+    _PREFIX_SEQUENCE = cython.declare(cython.const[cython.int], 19)
     _SETUP_JOIN_TUPLE = cython.declare(cython.const[cython.int], 20)
+    _TABLE_HINT_LIST = cython.declare(cython.const[cython.int], 21)
+    _PLAIN_DICT = cython.declare(cython.const[cython.int], 22)
+    _DIALECT_OPTIONS = cython.declare(cython.const[cython.int], 23)
+    _STRING_CLAUSEELEMENT_DICT = cython.declare(
+        cython.const[cython.int], 24
+    )
+    _STRING_MULTI_DICT = cython.declare(cython.const[cython.int], 25)
+    _CANONICAL_COLUMN_COLLECTION = cython.declare(
+        cython.const[cython.int], 26
+    )
+    _NO_CACHE_TRAVERSAL = cython.declare(cython.const[cython.int], 27)
+    _DML_ORDERED_VALUES = cython.declare(cython.const[cython.int], 28)
     _DML_VALUES = cython.declare(cython.const[cython.int], 29)
+    _PARAMS = cython.declare(cython.const[cython.int], 30)
 else:
     _CACHE_IN_PLACE = 0
     _CALL_GEN_CACHE_KEY = 1
@@ -282,9 +465,28 @@ else:
     _ANNOTATIONS_KEY = 5
     _CLAUSEELEMENT_LIST = 6
     _PY_METHOD = 7
+    _COMPILE_STATE_FUNCS = 8
+    _INSPECTABLE = 9
+    _STRING_LIST = 10
+    _MULTI = 11
+    _MULTI_LIST = 12
     _HAS_CACHE_KEY_TUPLES = 13
+    _HAS_CACHE_KEY_LIST = 14
+    _EXECUTABLE_OPTIONS = 15
+    _INSPECTABLE_LIST = 16
+    _NAMED_DDL_ELEMENT = 18
+    _PREFIX_SEQUENCE = 19
     _SETUP_JOIN_TUPLE = 20
+    _TABLE_HINT_LIST = 21
+    _PLAIN_DICT = 22
+    _DIALECT_OPTIONS = 23
+    _STRING_CLAUSEELEMENT_DICT = 24
+    _STRING_MULTI_DICT = 25
+    _CANONICAL_COLUMN_COLLECTION = 26
+    _NO_CACHE_TRAVERSAL = 27
+    _DML_ORDERED_VALUES = 28
     _DML_VALUES = 29
+    _PARAMS = 30
 
 
 class CacheTraverseTarget(Enum):

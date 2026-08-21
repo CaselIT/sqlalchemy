@@ -190,6 +190,57 @@ class BaseHasCacheKey:
                                 ]
                             ),
                         )
+                    elif kind == _HAS_CACHE_KEY_TUPLES:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                tuple(
+                                    elem._gen_cache_key(am, bindparams)
+                                    for elem in tup_elem
+                                )
+                                for tup_elem in obj
+                            )
+                        )
+                    elif kind == _SETUP_JOIN_TUPLE:
+                        result.extend(
+                            tuple(
+                                (
+                                    target._gen_cache_key(am, bindparams),
+                                    (
+                                        onclause._gen_cache_key(
+                                            am, bindparams
+                                        )
+                                        if onclause is not None
+                                        else None
+                                    ),
+                                    (
+                                        from_._gen_cache_key(am, bindparams)
+                                        if from_ is not None
+                                        else None
+                                    ),
+                                    tuple(
+                                        (key, flags[key])
+                                        for key in sorted(flags)
+                                    ),
+                                )
+                                for target, onclause, from_, flags in obj
+                            )
+                        )
+                    elif kind == _DML_VALUES:
+                        result.append(element.name)
+                        result.append(
+                            tuple(
+                                (
+                                    (
+                                        key._gen_cache_key(am, bindparams)
+                                        if hasattr(key, "__clause_element__")
+                                        else key
+                                    ),
+                                    obj[key]._gen_cache_key(am, bindparams),
+                                )
+                                for key in obj
+                            )
+                        )
                     elif kind == _PY_METHOD:
                         py_method = element  # type: ignore[assignment]
                         result.extend(
@@ -210,14 +261,30 @@ class CacheConst(Enum):
 
 # NOTE: declarations are invisible from python
 _NO_CACHE = cython.declare(object, CacheConst.NO_CACHE)
-_CACHE_IN_PLACE = cython.declare(cython.int, 0)
-_CALL_GEN_CACHE_KEY = cython.declare(cython.int, 1)
-_STATIC_CACHE_KEY = cython.declare(cython.int, 2)
-_PROPAGATE_ATTRS = cython.declare(cython.int, 3)
-_ANON_NAME = cython.declare(cython.int, 4)
-_ANNOTATIONS_KEY = cython.declare(cython.int, 5)
-_CLAUSEELEMENT_LIST = cython.declare(cython.int, 6)
-_PY_METHOD = cython.declare(cython.int, 7)
+if cython.compiled:
+    _CACHE_IN_PLACE = cython.declare(cython.const[cython.int], 0)
+    _CALL_GEN_CACHE_KEY = cython.declare(cython.const[cython.int], 1)
+    _STATIC_CACHE_KEY = cython.declare(cython.const[cython.int], 2)
+    _PROPAGATE_ATTRS = cython.declare(cython.const[cython.int], 3)
+    _ANON_NAME = cython.declare(cython.const[cython.int], 4)
+    _ANNOTATIONS_KEY = cython.declare(cython.const[cython.int], 5)
+    _CLAUSEELEMENT_LIST = cython.declare(cython.const[cython.int], 6)
+    _PY_METHOD = cython.declare(cython.const[cython.int], 7)
+    _HAS_CACHE_KEY_TUPLES = cython.declare(cython.const[cython.int], 13)
+    _SETUP_JOIN_TUPLE = cython.declare(cython.const[cython.int], 20)
+    _DML_VALUES = cython.declare(cython.const[cython.int], 29)
+else:
+    _CACHE_IN_PLACE = 0
+    _CALL_GEN_CACHE_KEY = 1
+    _STATIC_CACHE_KEY = 2
+    _PROPAGATE_ATTRS = 3
+    _ANON_NAME = 4
+    _ANNOTATIONS_KEY = 5
+    _CLAUSEELEMENT_LIST = 6
+    _PY_METHOD = 7
+    _HAS_CACHE_KEY_TUPLES = 13
+    _SETUP_JOIN_TUPLE = 20
+    _DML_VALUES = 29
 
 
 class CacheTraverseTarget(Enum):
@@ -246,6 +313,10 @@ _attr_info_kind: Dict[Any, int] = {
     InternalTraversal.dp_clauseelement_list: _CLAUSEELEMENT_LIST,
     InternalTraversal.dp_clauseelement_tuple: _CLAUSEELEMENT_LIST,
     InternalTraversal.dp_memoized_select_entities: _CLAUSEELEMENT_LIST,
+    InternalTraversal.dp_has_cache_key_tuples: _HAS_CACHE_KEY_TUPLES,
+    InternalTraversal.dp_clauseelement_tuples: _HAS_CACHE_KEY_TUPLES,
+    InternalTraversal.dp_setup_join_tuple: _SETUP_JOIN_TUPLE,
+    InternalTraversal.dp_dml_values: _DML_VALUES,
 }
 
 

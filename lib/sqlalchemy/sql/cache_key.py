@@ -464,11 +464,9 @@ def _ad_hoc_cache_key_from_args(
 class _CacheKeyTraversal(
     HasTraversalDispatch, _cache_key_cy._BaseCacheKeyTraversal
 ):
-    # the dispatch symbols below are resolved at class setup time by
-    # _generate_class_attrs(), which records the handler for each attribute
-    # as an integer "kind" that the compiled traversal switches on directly;
-    # only the symbols that have no such inline handler are left as actual
-    # methods on this class
+    # Inline dispatch symbols are resolved to integer kinds at class setup
+    # time.  The remaining visit methods are recorded under _PY_METHOD and
+    # called by the traversal only when their attributes are populated.
 
     visit_has_cache_key = visit_clauseelement = CALL_GEN_CACHE_KEY
     visit_clauseelement_list = InternalTraversal.dp_clauseelement_list
@@ -554,26 +552,8 @@ class _CacheKeyTraversal(
             ),
         )
 
-    def visit_has_cache_key_tuples(
-        self,
-        attrname: str,
-        obj: Any,
-        parent: Any,
-        anon_map: anon_map,
-        bindparams: List[BindParameter[Any]],
-    ) -> Tuple[Any, ...]:
-        if not obj:
-            return ()
-        return (
-            attrname,
-            tuple(
-                tuple(
-                    elem._gen_cache_key(anon_map, bindparams)
-                    for elem in tup_elem
-                )
-                for tup_elem in obj
-            ),
-        )
+    visit_has_cache_key_tuples = InternalTraversal.dp_has_cache_key_tuples
+    visit_clauseelement_tuples = InternalTraversal.dp_clauseelement_tuples
 
     def visit_has_cache_key_list(
         self,
@@ -621,18 +601,6 @@ class _CacheKeyTraversal(
             attrname, [inspect(o) for o in obj], parent, anon_map, bindparams
         )
 
-    def visit_clauseelement_tuples(
-        self,
-        attrname: str,
-        obj: Any,
-        parent: Any,
-        anon_map: anon_map,
-        bindparams: List[BindParameter[Any]],
-    ) -> Tuple[Any, ...]:
-        return self.visit_has_cache_key_tuples(
-            attrname, obj, parent, anon_map, bindparams
-        )
-
     def visit_fromclause_ordered_set(
         self,
         attrname: str,
@@ -646,26 +614,6 @@ class _CacheKeyTraversal(
         return (
             attrname,
             tuple([elem._gen_cache_key(anon_map, bindparams) for elem in obj]),
-        )
-
-    def visit_clauseelement_unordered_set(
-        self,
-        attrname: str,
-        obj: Any,
-        parent: Any,
-        anon_map: anon_map,
-        bindparams: List[BindParameter[Any]],
-    ) -> Tuple[Any, ...]:
-        if not obj:
-            return ()
-        cache_keys = [
-            elem._gen_cache_key(anon_map, bindparams) for elem in obj
-        ]
-        return (
-            attrname,
-            tuple(
-                sorted(cache_keys)
-            ),  # cache keys all start with (id_, class)
         )
 
     def visit_named_ddl_element(
@@ -699,31 +647,7 @@ class _CacheKeyTraversal(
             ),
         )
 
-    def visit_setup_join_tuple(
-        self,
-        attrname: str,
-        obj: Any,
-        parent: Any,
-        anon_map: anon_map,
-        bindparams: List[BindParameter[Any]],
-    ) -> Tuple[Any, ...]:
-        return tuple(
-            (
-                target._gen_cache_key(anon_map, bindparams),
-                (
-                    onclause._gen_cache_key(anon_map, bindparams)
-                    if onclause is not None
-                    else None
-                ),
-                (
-                    from_._gen_cache_key(anon_map, bindparams)
-                    if from_ is not None
-                    else None
-                ),
-                tuple([(key, flags[key]) for key in sorted(flags)]),
-            )
-            for (target, onclause, from_, flags) in obj
-        )
+    visit_setup_join_tuple = InternalTraversal.dp_setup_join_tuple
 
     def visit_table_hint_list(
         self,
@@ -831,7 +755,6 @@ class _CacheKeyTraversal(
         anon_map: anon_map,
         bindparams: List[BindParameter[Any]],
     ) -> Tuple[Any, ...]:
-        # inlining into the internals of ColumnCollection
         return (
             attrname,
             tuple(
@@ -874,30 +797,7 @@ class _CacheKeyTraversal(
             ),
         )
 
-    def visit_dml_values(
-        self,
-        attrname: str,
-        obj: Any,
-        parent: Any,
-        anon_map: anon_map,
-        bindparams: List[BindParameter[Any]],
-    ) -> Tuple[Any, ...]:
-        # in py37 we can assume two dictionaries created in the same
-        # insert ordering will retain that sorting
-        return (
-            attrname,
-            tuple(
-                (
-                    (
-                        k._gen_cache_key(anon_map, bindparams)
-                        if hasattr(k, "__clause_element__")
-                        else k
-                    ),
-                    obj[k]._gen_cache_key(anon_map, bindparams),
-                )
-                for k in obj
-            ),
-        )
+    visit_dml_values = InternalTraversal.dp_dml_values
 
     def visit_dml_multi_values(
         self,
@@ -907,7 +807,6 @@ class _CacheKeyTraversal(
         anon_map: anon_map,
         bindparams: List[BindParameter[Any]],
     ) -> Tuple[Any, ...]:
-        # multivalues are simply not cacheable right now
         anon_map[NO_CACHE] = True
         return ()
 
